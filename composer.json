@@ -1,0 +1,21 @@
+{
+    "name": "bmwx591/yii2-privat24",
+    "description": "Yuo can use this extension for getting information from privat24 API",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","privat24","privatbank"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ivan Aslanov",
+            "email": "bumerx591@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "bmwx591\\privat24\\": ""
+        }
+    }
+}
