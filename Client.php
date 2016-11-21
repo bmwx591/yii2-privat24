@@ -115,11 +115,10 @@ class Client extends Object
 
     public function send(RequestInterface $request)
     {
-        $request->setClient($this);
         if (!$request->validate()) {
             throw new InvalidParamException('Request is not valid');
         }
-        $request->prepare();
+        $request->setClient($this)->prepare();
         $httpClient = new HttpClient([
             'baseUrl' => $this->baseUrl,
             'transport' => CurlTransport::class,

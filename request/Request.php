@@ -8,10 +8,17 @@
 
 namespace bmwx591\privat24\request;
 
-
+use Yii;
 use bmwx591\privat24\Client;
 use bmwx591\privat24\request\properties\PropertiesInterface;
+use yii\base\InvalidParamException;
+use yii\base\InvalidValueException;
 
+/**
+ * Class Request
+ * @package bmwx591\privat24\request
+ *
+ */
 abstract class Request implements RequestInterface
 {
     protected $client;
@@ -24,17 +31,18 @@ abstract class Request implements RequestInterface
     protected $content;
     protected $format = Client::FORMAT_XML;
 
-    public function __construct($config = [], $properties = [])
+    public function __construct($config = [])
     {
-        if (!empty($properties)) {
-            if (!isset($properties['class'])) {
-                $properties['class'] = $this->propertiesClass;
+        if ($config['properties']) {
+            $this->setProperties($config['properties']);
+            if (!$this->getProperties()->validate()) {
+                throw new InvalidParamException('Illegal values for request options');
             }
-            $config['properties'] = $properties;
+            unset($config['properties']);
         }
-        if (!empty($config)) {
+//        if (!empty($config)) {
             Yii::configure($this, $config);
-        }
+//        }
     }
     
     /**
@@ -45,19 +53,32 @@ abstract class Request implements RequestInterface
         return $this->url;
     }
 
+    /**
+     * @param $url
+     * @return $this
+     */
     public function setUrl($url)
     {
         $this->url = $url;
+        return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getOperation()
     {
         return $this->operation;
     }
 
+    /**
+     * @param string $operation
+     * @return $this
+     */
     public function setOperation($operation)
     {
         $this->operation = $operation;
+        return $this;
     }
 
     /**
@@ -70,10 +91,12 @@ abstract class Request implements RequestInterface
 
     /**
      * @param integer $wait
+     * @return $this
      */
     public function setWait($wait)
     {
         $this->wait = $wait;
+        return $this;
     }
 
     /**
@@ -81,15 +104,17 @@ abstract class Request implements RequestInterface
      */
     public function getTest()
     {
-        return is_null($this->test) ? $this->client->getIsTest() : $this->test;
+        return is_null($this->test) ? $this->getClient()->getIsTest() : $this->test;
     }
 
     /**
      * @param boolean $test
+     * @return $this
      */
     public function setTest($test)
     {
         $this->test = $test;
+        return $this;
     }
 
     /**
@@ -102,45 +127,68 @@ abstract class Request implements RequestInterface
 
     /**
      * @param string $paymentId
+     * @return $this
      */
     public function setPaymentId($paymentId)
     {
         $this->paymentId = $paymentId;
+        return $this;
     }
 
+    /**
+     * @return mixed
+     */
     public function getContent()
     {
         return $this->content;
     }
 
+    /**
+     * @param mixed $content
+     * @return $this
+     */
     public function setContent($content)
     {
         $this->content = $content;
+        return $this;
     }
 
+    /**
+     * @return integer
+     */
     public function getMerchantId()
     {
-        return $this->client->getId();
+        return $this->getClient()->getId();
     }
 
+    /**
+     * @return string
+     */
     public function getFormat()
     {
         return $this->format;
     }
 
+    /**
+     * @param string $format
+     * @return $this
+     */
     public function setFormat($format)
     {
         $this->format = $format;
+        return $this;
     }
 
-    public function setProperties(PropertiesInterface $properties)
-    {
-        $this->properties = $properties;
-    }
-
+    /**
+     * @return PropertiesInterface
+     */
     public function getProperties()
     {
-        return $this->properties->getAttributes();
+        if (empty($this->properties)) {
+            throw new InvalidValueException('Must set the properties to request that implements 
+                yii\request\properties\PropertiesInterface');
+        }
+        return $this->properties;
     }
 
     /**
@@ -148,23 +196,34 @@ abstract class Request implements RequestInterface
      */
     public function getSignature($data)
     {
-        return sha1(md5($data . $this->client->getPassword()));
+        return sha1(md5($data . $this->getClient()->getPassword()));
     }
 
+    /**
+     * @return Client
+     */
     public function getClient()
     {
+        if (empty($this->client)) {
+            throw new InvalidValueException('Must set the client property');
+        }
         return $this->client;
     }
 
+    /**
+     * @param Client $client
+     * @return $this
+     */
     public function setClient(Client $client)
     {
         $this->client = $client;
+        return $this;
     }
 
     /**
      * @return array Request attributes
      */
-    public function getAttributes()
+    protected function getAttributes()
     {
         return [
             'wait' => $this->getWait(),
@@ -183,14 +242,19 @@ abstract class Request implements RequestInterface
             [['wait', 'test', 'paymentId', 'operation'], 'required'],
             ['wait', 'integer', 'min' => 0, 'max' => 90],
             ['test', 'boolean', 'trueValue' => true, 'falseValue' => false, 'strict' => true],
-            [['paymentId', 'operation'], 'string', 'encoding' => 'UTF-8']
+            [['paymentId', 'operation'], 'string']
         ]);
-        $this->properties->validate();
-        return !$model->hasErrors() && !$this->properties->hasErrors();
+        $this->getProperties()->validate();
+        return !($model->hasErrors() || $this->getProperties()->hasErrors());
     }
 
+    /**
+     * Prepare request content
+     * @return $this
+     */
     public function prepare()
     {
-        $this->client->getFormatter($this->getFormat())->formate($this);
+        $this->getClient()->getFormatter($this->getFormat())->formate($this);
+        return $this;
     }
 }

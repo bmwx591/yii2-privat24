@@ -9,6 +9,8 @@
 
 namespace bmwx591\privat24\request;
 
+use bmwx591\privat24\request\properties\PropertiesInterface;
+use bmwx591\privat24\request\properties\SendSMSProperties;
 use Yii;
 
 /**
@@ -18,4 +20,12 @@ use Yii;
 class SendSMSRequest extends Request
 {
     protected $url = 'sendsms';
+
+    /**
+     * @param array $properties
+     */
+    public function setProperties($properties = [])
+    {
+        $this->properties = new SendSMSProperties($properties);
+    }
 }

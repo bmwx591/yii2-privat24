@@ -15,16 +15,31 @@ use bmwx591\privat24\request\properties\PropertiesInterface;
 interface RequestInterface
 {
     public function validate();
+
+    public function prepare();
     
     public function getUrl();
+
+    public function getOperation();
+
+    public function getWait();
+
+    public function getTest();
+
+    public function getPaymentId();
+
+    public function getContent();
+
+    public function setContent($content);
+
+    public function getMerchantId();
+
+    public function getProperties();
+
+    public function setProperties($properties = []);
 
     public function getSignature($data);
 
     public function setClient(Client $client);
 
-    public function getAttributes();
-    
-    public function setProperties(PropertiesInterface $properties);
-    
-    public function prepare();
 }

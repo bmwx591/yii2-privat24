@@ -29,8 +29,8 @@ class SendSMSProperties extends Model implements PropertiesInterface
     {
         return [
             [['phone', 'phoneTo', 'text'], 'required'],
-            ['text', 'string', 'encoding' => 'UTF-8'],
-            [['phone', 'phoneTo'], 'string', 'max' => 20, 'encoding' => 'UTF-8']
+            ['text', 'string'],
+            [['phone', 'phoneTo'], 'string', 'max' => 20]
         ];
     }
 

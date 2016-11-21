@@ -12,7 +12,10 @@ class ClientInitializeTest extends Codeception\TestCase\Test
 
     protected function _before()
     {
-        $this->client = new \bmwx591\privat24\Client();
+        $this->client = new \bmwx591\privat24\Client([
+            'id' => 75482,
+            'password' => '3A90E5J0f6OUIfqN1Qu59gYrjDgDblfL'
+        ]);
     }
 
     protected function _after()
