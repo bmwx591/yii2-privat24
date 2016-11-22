@@ -14,8 +14,6 @@ use bmwx591\privat24\request\properties\PropertiesInterface;
 
 interface RequestInterface
 {
-    public function validate();
-
     public function prepare();
     
     public function getUrl();

@@ -1,20 +1,11 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivan
- * Date: 18.11.16
- * Time: 8:42
- */
 
 namespace bmwx591\privat24;
 
 use bmwx591\privat24\request\RequestInterface;
-use Yii;
-use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
-use yii\base\Object;
-use \yii\httpclient\Client as HttpClient;
-use yii\httpclient\CurlTransport;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Client as HttpClient;
 
 /**
  * Class Client
@@ -28,19 +19,24 @@ class Client extends Object
 {
     const FORMAT_XML = 'xml';
     
-    public $baseUrl = 'https://api.privatbank.ua/p24api';
-    public $formatters = [
+    private $baseUrl = 'https://api.privatbank.ua/p24api';
+    private $formatters = [
         self::FORMAT_XML => 'bmwx591\privat24\XmlFormatter'
     ];
+    private $http;
     private $id;
     private $password;
     private $isTest = false;
 
-    public function init()
+    /**
+     * @param string $baseUrl
+     */
+    public function setBaseUrl($baseUrl)
     {
-        if (!isset($this->id, $this->password)) {
-            throw new InvalidConfigException('');
+        if (!is_string($baseUrl)) {
+            throw new \BadMethodCallException('baseUrl must be string');
         }
+        $this->baseUrl = $baseUrl;
     }
 
     /**
@@ -53,12 +49,12 @@ class Client extends Object
 
     /**
      * @param integer $id
-     * @throws InvalidParamException
+     * @throws \BadMethodCallException
      */
     public function setId($id)
     {
-        if (!is_int($id) || $id < 0) {
-            throw new InvalidParamException('Id must be integer');
+        if (!is_int($id) || $id < 1) {
+            throw new \BadMethodCallException('Id must be integer');
         }
         $this->id = $id;
     }
@@ -73,12 +69,12 @@ class Client extends Object
 
     /**
      * @param string $password
-     * @throws InvalidParamException
+     * @throws \BadMethodCallException
      */
     public function setPassword($password)
     {
-        if (!preg_match('/^[0-9a-zA-Z]{32}$/', $password)) {
-            throw new InvalidParamException('Illegal password value');
+        if (!is_string($password) || !preg_match('/^[0-9a-zA-Z]{32}$/', $password)) {
+            throw new \BadMethodCallException('Illegal password value');
         }
         $this->password = $password;
     }
@@ -97,7 +93,7 @@ class Client extends Object
     public function setIsTest($isTest)
     {
         if (!is_bool($isTest)) {
-            throw new InvalidParamException('Parametr must be boolean');
+            throw new \BadMethodCallException('Parametr must be boolean');
         }
         $this->isTest = $isTest;
     }
@@ -105,29 +101,54 @@ class Client extends Object
     public function getFormatter($format)
     {
         if (!isset($this->formatters[$format])) {
-            throw new InvalidParamException("Unrecognized format '{$format}'");
+            throw new \BadMethodCallException("Unrecognized format '{$format}'");
         }
-        if (!is_object($this->formatters[$format])) {
-            $this->formatters[$format] = Yii::createObject($this->formatters[$format]);
+        $formatter = $this->formatters[$format];
+        if (is_string($formatter)) {
+            $this->formatters[$format] = new $formatter();
         }
         return $this->formatters[$format];
     }
 
+    /**
+     * @return HttpClient
+     */
+    public function getHttpClient()
+    {
+        if (empty($this->http)) {
+            $this->http = new HttpClient();
+        }
+        return $this->http;
+    }
+
+    /**
+     * @param ClientInterface $http
+     */
+    public function setHttpClient(ClientInterface $http)
+    {
+        $this->http = $http;
+    }
+
+    protected function prepareRequest($request)
+    {
+        return new Request($request->getMethod(), $request->getUrl(), [
+            'Content-Type' => 'application/xml; charset=utf-8'
+        ], $request->getContent());
+    }
+
+    public function getFormatters()
+    {
+        return $this->formatters;
+    }
+
     public function send(RequestInterface $request)
     {
-        if (!$request->validate()) {
-            throw new InvalidParamException('Request is not valid');
-        }
         $request->setClient($this)->prepare();
-        $httpClient = new HttpClient([
-            'baseUrl' => $this->baseUrl,
-            'transport' => CurlTransport::class,
-            'requestConfig' => [
-                'url' => $request->getUrl(),
-                'content' => $request->getContent()
-            ]
+//        $request = $this->prepareRequest($request);
+//        var_dump($request->getRequestTarget());die;
+        $response = $this->getHttpClient()->send($this->prepareRequest($request), [
+            'base_uri' => $this->baseUrl
         ]);
-        $response = $httpClient->createRequest()->send();
-        var_dump($response);die;
+        var_dump($response->getBody()->getContents());die;
     }
 }

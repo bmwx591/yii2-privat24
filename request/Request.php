@@ -8,42 +8,26 @@
 
 namespace bmwx591\privat24\request;
 
-use Yii;
 use bmwx591\privat24\Client;
+use bmwx591\privat24\Object;
 use bmwx591\privat24\request\properties\PropertiesInterface;
-use yii\base\InvalidParamException;
-use yii\base\InvalidValueException;
 
 /**
  * Class Request
  * @package bmwx591\privat24\request
  *
  */
-abstract class Request implements RequestInterface
+abstract class Request extends Object implements RequestInterface
 {
-    protected $client;
-    protected $operation = 'cmt';
-    protected $wait = 0;
-    protected $test;
-    protected $paymentId;
-    protected $properties;
-    protected $propertiesClass;
-    protected $content;
-    protected $format = Client::FORMAT_XML;
-
-    public function __construct($config = [])
-    {
-        if ($config['properties']) {
-            $this->setProperties($config['properties']);
-            if (!$this->getProperties()->validate()) {
-                throw new InvalidParamException('Illegal values for request options');
-            }
-            unset($config['properties']);
-        }
-//        if (!empty($config)) {
-            Yii::configure($this, $config);
-//        }
-    }
+    private $client;
+    private $operation = 'cmt';
+    private $wait = 0;
+    private $test;
+    private $paymentId;
+    private $properties;
+    private $content;
+    private $format = Client::FORMAT_XML;
+    private $method = 'get';
     
     /**
      * @return string
@@ -59,6 +43,9 @@ abstract class Request implements RequestInterface
      */
     public function setUrl($url)
     {
+        if (!is_string($url)) {
+            throw new \BadMethodCallException('url must be string');
+        }
         $this->url = $url;
         return $this;
     }
@@ -77,6 +64,9 @@ abstract class Request implements RequestInterface
      */
     public function setOperation($operation)
     {
+        if (!is_string($operation)) {
+            throw new \BadMethodCallException('operation must be string');
+        }
         $this->operation = $operation;
         return $this;
     }
@@ -95,6 +85,9 @@ abstract class Request implements RequestInterface
      */
     public function setWait($wait)
     {
+        if (!is_int($wait) || $wait < 0 || $wait > 90) {
+            throw new \BadMethodCallException('wait must be integer (0-90) seconds');
+        }
         $this->wait = $wait;
         return $this;
     }
@@ -113,6 +106,9 @@ abstract class Request implements RequestInterface
      */
     public function setTest($test)
     {
+        if (!is_bool($test)) {
+            throw new \BadMethodCallException('test must be boolean');
+        }
         $this->test = $test;
         return $this;
     }
@@ -131,6 +127,9 @@ abstract class Request implements RequestInterface
      */
     public function setPaymentId($paymentId)
     {
+        if (!is_string($paymentId)) {
+            throw new \BadMethodCallException('paymentId must be string');
+        }
         $this->paymentId = $paymentId;
         return $this;
     }
@@ -175,6 +174,9 @@ abstract class Request implements RequestInterface
      */
     public function setFormat($format)
     {
+        if (!is_string($format)) {
+            throw new \BadMethodCallException('format must be string');
+        }
         $this->format = $format;
         return $this;
     }
@@ -185,11 +187,21 @@ abstract class Request implements RequestInterface
     public function getProperties()
     {
         if (empty($this->properties)) {
-            throw new InvalidValueException('Must set the properties to request that implements 
-                yii\request\properties\PropertiesInterface');
+            throw new \BadMethodCallException('Must implements yii\request\properties\PropertiesInterface');
         }
         return $this->properties;
     }
+
+    public function setProperties($properties = [])
+    {
+        $properties = $this->getPropertiesInstance($properties);
+        if (!$properties instanceof PropertiesInterface) {
+            throw new \BadMethodCallException('Properties must implements yii\request\properties\PropertiesInterface');
+        }
+        $this->properties = $properties;
+    }
+
+    abstract protected function getPropertiesInstance($properties);
 
     /**
      * @return string
@@ -205,7 +217,7 @@ abstract class Request implements RequestInterface
     public function getClient()
     {
         if (empty($this->client)) {
-            throw new InvalidValueException('Must set the client property');
+            throw new \BadMethodCallException('Must set the client property');
         }
         return $this->client;
     }
@@ -220,32 +232,17 @@ abstract class Request implements RequestInterface
         return $this;
     }
 
-    /**
-     * @return array Request attributes
-     */
-    protected function getAttributes()
+    public function getMethod()
     {
-        return [
-            'wait' => $this->getWait(),
-            'test' => $this->getTest(),
-            'paymentId' => $this->getPaymentId(),
-            'operation' => $this->getOperation()
-        ];
+        return $this->method;
     }
 
-    /**
-     * @return boolean
-     */
-    public function validate()
+    public function setMethod($method)
     {
-        $model =  DynamicModel::validateData($this->getAttributes(), [
-            [['wait', 'test', 'paymentId', 'operation'], 'required'],
-            ['wait', 'integer', 'min' => 0, 'max' => 90],
-            ['test', 'boolean', 'trueValue' => true, 'falseValue' => false, 'strict' => true],
-            [['paymentId', 'operation'], 'string']
-        ]);
-        $this->getProperties()->validate();
-        return !($model->hasErrors() || $this->getProperties()->hasErrors());
+        if (!is_string($method)) {
+            throw new \BadMethodCallException('method must be string');
+        }
+        $this->method = $method;
     }
 
     /**

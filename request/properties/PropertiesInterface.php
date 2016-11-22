@@ -12,13 +12,7 @@ namespace bmwx591\privat24\request\properties;
 interface PropertiesInterface
 {
     /**
-     * Validate properties values
-     * @return boolean
-     */
-    public function validate();
-
-    /**
      * @return array 
      */
-    public function getAttributes();
+    public function getValues();
 }

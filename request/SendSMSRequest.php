@@ -22,10 +22,11 @@ class SendSMSRequest extends Request
     protected $url = 'sendsms';
 
     /**
-     * @param array $properties
+     * @param array $properties Request properties
+     * @return SendSMSProperties
      */
-    public function setProperties($properties = [])
+    protected function getPropertiesInstance($properties)
     {
-        $this->properties = new SendSMSProperties($properties);
+        return new SendSMSProperties($properties);
     }
 }

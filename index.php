@@ -1,24 +1,24 @@
 <?php
-namespace bmwx591\privat24;
-
 require_once (__DIR__ . '/vendor/autoload.php');
 require_once (__DIR__ . '/vendor/yiisoft/yii2/Yii.php');
-Yii::setAlias('@yii', __DIR__. '/vendor/yiisoft/yii2');
 
-$application = new yii\web\Application();
+$application = new yii\console\Application([
+    'id' => 'test',
+    'basePath' => dirname(__DIR__)
+]);
 $application->run();
 
-use bmwx591\privat24\request\properties\SendSMSProperties;
-use bmwx591\privat24\request\Request;
 use bmwx591\privat24\request\SendSMSRequest;
+use bmwx591\privat24\Client;
 
 $client = new Client([
-    'id' => '<id>',
-    'password' => '<password>',
+    'id' => 123554,
+    'password' => 'w8y8zjPWOH8oaIsqY207ff5l2dSMR5UQ',
     'isTest' => true
 ]);
 $request = new SendSMSRequest([
-    'paymentId' => 'pay_online_1',
+    'method' => 'post',
+    'paymentId' => 'payment_id_1',
     'properties' => [
         'phone' => '+380995038736',
         'phoneTo' => '+380964894718',

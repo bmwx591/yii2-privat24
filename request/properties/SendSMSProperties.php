@@ -1,15 +1,8 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: ivan
- * Date: 18.11.16
- * Time: 22:43
- */
-
 namespace bmwx591\privat24\request\properties;
 
-use yii\base\Model;
+use bmwx591\privat24\Object;
 
 /**
  * Class SendSMSProperties
@@ -19,20 +12,11 @@ use yii\base\Model;
  * @property string $phoneTo Phone which will be sent sms
  * @property string $text Sms text
  */
-class SendSMSProperties extends Model implements PropertiesInterface
+class SendSMSProperties extends Object implements PropertiesInterface
 {
     protected $phone;
     protected $phoneTo;
     protected $text;
-
-    public function rules()
-    {
-        return [
-            [['phone', 'phoneTo', 'text'], 'required'],
-            ['text', 'string'],
-            [['phone', 'phoneTo'], 'string', 'max' => 20]
-        ];
-    }
 
     /**
      * @return string
@@ -47,6 +31,9 @@ class SendSMSProperties extends Model implements PropertiesInterface
      */
     public function setPhone($phone)
     {
+        if (!is_string($phone)) {
+            throw new \BadMethodCallException('phone must be string');
+        }
         $this->phone = $phone;
     }
 
@@ -63,6 +50,9 @@ class SendSMSProperties extends Model implements PropertiesInterface
      */
     public function setPhoneTo($phoneTo)
     {
+        if (!is_string($phoneTo)) {
+            throw new \BadMethodCallException('phoneTo must be string');
+        }
         $this->phoneTo = $phoneTo;
     }
 
@@ -79,13 +69,16 @@ class SendSMSProperties extends Model implements PropertiesInterface
      */
     public function setText($text)
     {
+        if (!is_string($text)) {
+            throw new \BadMethodCallException('text must be string');
+        }
         $this->text = $text;
     }
 
     /**
      * @return array Properties for request
      */
-    public function getAttributes()
+    public function getValues()
     {
         return [
             'phone' => urlencode($this->getPhone()),
