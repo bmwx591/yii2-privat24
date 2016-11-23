@@ -30,7 +30,10 @@ class XmlFormatter implements FormatterInterface
         $data->appendChild($dom->createElement('wait', $request->getWait()));
         $data->appendChild($dom->createElement('test', (int) $request->getTest()));
         $payment = $dom->createElement('payment');
-        $payment->setAttribute('id', $request->getPaymentId());
+        $paymentId = $request->getPaymentId();
+        if (isset($paymentId)) {
+            $payment->setAttribute('id', $paymentId);
+        }
         $data->appendChild($payment);
         foreach ($request->getProperties()->getValues() as $name => $value) {
             $prop = $dom->createElement('prop');

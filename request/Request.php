@@ -224,7 +224,7 @@ abstract class Request extends Object implements RequestInterface
 
     /**
      * @param Client $client
-     * @return $this
+     * @return Request
      */
     public function setClient(Client $client)
     {

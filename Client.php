@@ -19,9 +19,12 @@ class Client extends Object
 {
     const FORMAT_XML = 'xml';
     
-    private $baseUrl = 'https://api.privatbank.ua/p24api';
+    private $baseUrl = 'https://api.privatbank.ua/p24api/';
     private $formatters = [
         self::FORMAT_XML => 'bmwx591\privat24\XmlFormatter'
+    ];
+    private $parsers = [
+        self::FORMAT_XML => 'bmwx591\privat24\XmlParser'
     ];
     private $http;
     private $id;
@@ -110,6 +113,19 @@ class Client extends Object
         return $this->formatters[$format];
     }
 
+
+    public function getParser($format)
+    {
+        if (!isset($this->parsers[$format])) {
+            throw new \BadMethodCallException("Unrecornized format '{$format}'");
+        }
+        $parser = $this->parsers[$format];
+        if (is_string($parser)) {
+            $this->parsers[$format] = new $parser();
+        }
+        return $this->parsers[$format];
+    }
+
     /**
      * @return HttpClient
      */
@@ -129,7 +145,7 @@ class Client extends Object
         $this->http = $http;
     }
 
-    protected function prepareRequest($request)
+    protected function getHttpRequest(RequestInterface $request)
     {
         return new Request($request->getMethod(), $request->getUrl(), [
             'Content-Type' => 'application/xml; charset=utf-8'
@@ -144,11 +160,13 @@ class Client extends Object
     public function send(RequestInterface $request)
     {
         $request->setClient($this)->prepare();
-//        $request = $this->prepareRequest($request);
-//        var_dump($request->getRequestTarget());die;
-        $response = $this->getHttpClient()->send($this->prepareRequest($request), [
-            'base_uri' => $this->baseUrl
-        ]);
-        var_dump($response->getBody()->getContents());die;
+        $httpRequest = $this->getHttpRequest($request);
+        $response = $this->getHttpClient()->send($httpRequest, ['base_uri' => $this->baseUrl]);
+
+        if (ResponseHelper::validate($response, $this->getPassword())) {
+//            var_dump($this->getParser($request->getFormat()));die;
+            return $this->getParser($request->getFormat())->parse($response);
+        }
+        throw new \Exception('Response is not valid');
     }
 }

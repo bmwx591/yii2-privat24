@@ -18,6 +18,10 @@ interface RequestInterface
     
     public function getUrl();
 
+    public function getFormat();
+
+    public function getMethod();
+
     public function getOperation();
 
     public function getWait();
