@@ -11,6 +11,7 @@ namespace bmwx591\privat24\request;
 use bmwx591\privat24\Client;
 use bmwx591\privat24\Object;
 use bmwx591\privat24\request\properties\PropertiesInterface;
+use bmwx591\privat24\SignatureHelper;
 
 /**
  * Class Request
@@ -208,7 +209,7 @@ abstract class Request extends Object implements RequestInterface
      */
     public function getSignature($data)
     {
-        return sha1(md5($data . $this->getClient()->getPassword()));
+        return SignatureHelper::calculate($data, $this->getClient()->getPassword());
     }
 
     /**

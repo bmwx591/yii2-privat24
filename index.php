@@ -12,8 +12,8 @@ use bmwx591\privat24\request\SendSMSRequest;
 use bmwx591\privat24\Client;
 
 $client = new Client([
-    'id' => 123554,
-    'password' => 'w8y8zjPWOH8oaIsqY207ff5l2dSMR5UQ',
+    'id' => 1,
+    'password' => '',
     'isTest' => true
 ]);
 $request = new SendSMSRequest([
@@ -26,4 +26,4 @@ $request = new SendSMSRequest([
     ]
 ]);
 //var_dump($request);die;
-var_dump($client->send($request));die;
+print_r($client->send($request));die;

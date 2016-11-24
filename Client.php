@@ -159,13 +159,34 @@ class Client extends Object
 
     public function send(RequestInterface $request)
     {
+        $parser = new XmlParser();
+        $content = '
+        <account_order>
+                <unsupport/>
+                <logged sessioncount="0" visitscount="0"/>
+                <locale language="ru">
+                    <date id="20140827T18:23:40" traditional="27.08.2014">27 авг 2014,Ср 18:23:40</date>
+                </locale>
+                <request url_base="http://privat24.privatbank.ua/p24/" url="/accountorder" os="Win" win="Y" ie="N"/>
+                <info>
+                    <dump PUREXML="" city="Киев" oper="prp" type="обувь" bonus=""/>
+                </info>
+                <bonus>
+                    <bonus name="Магазин \'Супер Стиль\'" address="Пр.Победы,136" type="обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="8050 423-88-51" work_time="10:00-21:00" country="UA"/>
+                    <bonus name="Маг. \'Валекс\'" address="г. Киев, ул. Мишуги, 3в" type="обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="0445552437" work_time="10:00-20:00" country="UA"/>
+                    <bonus name="Магазин обуви \'Валекс\'" address="г. Киев, ул. Строителей, 32/2" type="обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="0445598509" work_time="10:00-22:00" country="UA"/>
+                    <bonus name="М-н \'Взуття для життя\'" address="г.Киев, ул. Братиславская, 26" type="Обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="80443610558" work_time="10:00-20:00" country="UA"/>
+                    <bonus name="М.Обувь для жизни" address="ул.Щусева, 2/19" type="розничная торговля обувью" bonus_plus="5.00" state="Киевская" city="Киев" tel="8050-353-13-94" work_time="10:00-20:00" country="UA"/>
+                </bonus>
+            </account_order>
+        ';
+        return $parser->parse($content);
         $request->setClient($this)->prepare();
         $httpRequest = $this->getHttpRequest($request);
         $response = $this->getHttpClient()->send($httpRequest, ['base_uri' => $this->baseUrl]);
-
-        if (ResponseHelper::validate($response, $this->getPassword())) {
-//            var_dump($this->getParser($request->getFormat()));die;
-            return $this->getParser($request->getFormat())->parse($response);
+        $responseContent = $response->getBody()->getContents();
+        if (SignatureHelper::validate($responseContent, $this->getPassword())) {
+            return $this->getParser($request->getFormat())->parse($responseContent);
         }
         throw new \Exception('Response is not valid');
     }
