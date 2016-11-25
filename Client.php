@@ -23,7 +23,7 @@ class Client extends Object
     private $formatters = [
         self::FORMAT_XML => 'bmwx591\privat24\XmlFormatter'
     ];
-    private $parsers = [
+    private $responseFormats = [
         self::FORMAT_XML => 'bmwx591\privat24\XmlParser'
     ];
     private $http;
@@ -160,25 +160,23 @@ class Client extends Object
     public function send(RequestInterface $request)
     {
         $parser = new XmlParser();
-        $content = '
-        <account_order>
-                <unsupport/>
-                <logged sessioncount="0" visitscount="0"/>
-                <locale language="ru">
-                    <date id="20140827T18:23:40" traditional="27.08.2014">27 авг 2014,Ср 18:23:40</date>
-                </locale>
-                <request url_base="http://privat24.privatbank.ua/p24/" url="/accountorder" os="Win" win="Y" ie="N"/>
-                <info>
-                    <dump PUREXML="" city="Киев" oper="prp" type="обувь" bonus=""/>
-                </info>
-                <bonus>
-                    <bonus name="Магазин \'Супер Стиль\'" address="Пр.Победы,136" type="обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="8050 423-88-51" work_time="10:00-21:00" country="UA"/>
-                    <bonus name="Маг. \'Валекс\'" address="г. Киев, ул. Мишуги, 3в" type="обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="0445552437" work_time="10:00-20:00" country="UA"/>
-                    <bonus name="Магазин обуви \'Валекс\'" address="г. Киев, ул. Строителей, 32/2" type="обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="0445598509" work_time="10:00-22:00" country="UA"/>
-                    <bonus name="М-н \'Взуття для життя\'" address="г.Киев, ул. Братиславская, 26" type="Обувь" bonus_plus="5.00" state="Киевская" city="Киев" tel="80443610558" work_time="10:00-20:00" country="UA"/>
-                    <bonus name="М.Обувь для жизни" address="ул.Щусева, 2/19" type="розничная торговля обувью" bonus_plus="5.00" state="Киевская" city="Киев" tel="8050-353-13-94" work_time="10:00-20:00" country="UA"/>
-                </bonus>
-            </account_order>
+        $content = '<?xml version="1.0" encoding="UTF-8"?>
+            <response version="1.0">
+                <merchant>
+                    <id>75482</id>
+                    <signature>553995c5ccc8c81815b58cf6374f68f00a28bbd7</signature>
+                </merchant>
+                <data>
+                    <oper>cmt</oper>
+                    <info>
+                        <statements status="excellent" credit="0.0" debet="0.3"  >
+                            <statement card="5168742060221193" appcode="591969" trandate="2013-09-02" amount="0.10 UAH" cardamount="-0.10 UAH" rest="0.95 UAH" terminal="Пополнение мобильного +380139917053 через «Приват24»" description="" />
+                            <statement card="5168742060221193" appcode="991794" trandate="2013-09-02" amount="0.10 UAH" cardamount="-0.10 UAH" rest="1.05 UAH" terminal="Пополнение мобильного +380139917035 через «Приват24»" description="" />
+                            <statement card="5168742060221193" appcode="801111" trandate="2013-09-02" amount="0.10 UAH" cardamount="-0.10 UAH" rest="1.15 UAH" terminal="Пополнение мобильного +380139910008 через «Приват24»" description="" />
+                        </statements>
+                    </info>
+                </data>
+            </response>
         ';
         return $parser->parse($content);
         $request->setClient($this)->prepare();

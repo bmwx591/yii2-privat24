@@ -13,7 +13,7 @@ use bmwx591\privat24\Client;
 
 $client = new Client([
     'id' => 1,
-    'password' => '',
+    'password' => '11111111111111111111111111111111',
     'isTest' => true
 ]);
 $request = new SendSMSRequest([
