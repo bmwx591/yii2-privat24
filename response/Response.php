@@ -1,15 +1,27 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: ivan
- * Date: 18.11.16
- * Time: 10:37
- */
-
 namespace bmwx591\privat24\response;
 
-interface Response
+class Response implements ResponseInterface
 {
+    private $content;
+
+    /**
+     * @inheridoc
+     * @return mixed
+     */
+    public function getContent()
+    {
+        return $this->content;
+    }
+
+    /**
+     *
+     * @param mixed $content
+     */
+    public function setContent($content)
+    {
+        $this->content = $content;
+    }
 
 }

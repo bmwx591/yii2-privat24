@@ -15,7 +15,7 @@ use bmwx591\privat24\request\properties\PropertiesInterface;
 interface RequestInterface
 {
     public function prepare();
-    
+
     public function getUrl();
 
     public function getFormat();
@@ -38,7 +38,7 @@ interface RequestInterface
 
     public function getProperties();
 
-    public function setProperties($properties = []);
+    public function setProperties(array $properties = []);
 
     public function getSignature($data);
 

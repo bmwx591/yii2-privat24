@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivan
- * Date: 19.11.16
- * Time: 3:43
- */
 
 namespace bmwx591\privat24;
 
-
-use bmwx591\privat24\request\Request;
+use bmwx591\privat24\request\properties\PropertiesInterface;
+use bmwx591\privat24\request\RequestInterface;
 
 class XmlFormatter implements FormatterInterface
 {
@@ -18,7 +12,7 @@ class XmlFormatter implements FormatterInterface
     public $encoding = 'utf-8';
     public $rootTag = 'request';
 
-    public function formate(Request $request)
+    public function formate(RequestInterface $request)
     {
         $dom = new \DOMDocument($this->version, $this->encoding);
         $root = $dom->createElement($this->rootTag);
@@ -35,11 +29,14 @@ class XmlFormatter implements FormatterInterface
             $payment->setAttribute('id', $paymentId);
         }
         $data->appendChild($payment);
-        foreach ($request->getProperties()->getValues() as $name => $value) {
-            $prop = $dom->createElement('prop');
-            $prop->setAttribute('name', $name);
-            $prop->setAttribute('value', $value);
-            $payment->appendChild($prop);
+        $properties = $request->getProperties();
+        if ($properties instanceof PropertiesInterface) {
+            foreach ($properties->getValues() as $name => $value) {
+                $prop = $dom->createElement('prop');
+                $prop->setAttribute('name', $name);
+                $prop->setAttribute('value', $value);
+                $payment->appendChild($prop);
+            }
         }
         $merchant = $dom->createElement('merchant');
         $merchant->appendChild($dom->createElement('id', $request->getMerchantId()));

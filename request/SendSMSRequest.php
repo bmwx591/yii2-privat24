@@ -25,7 +25,7 @@ class SendSMSRequest extends Request
      * @param array $properties Request properties
      * @return SendSMSProperties
      */
-    protected function getPropertiesInstance($properties)
+    protected function getPropertiesInstance(array $properties)
     {
         return new SendSMSProperties($properties);
     }

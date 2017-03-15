@@ -2,8 +2,6 @@
 
 namespace bmwx591\privat24;
 
-use Psr\Http\Message\ResponseInterface;
-
 class SignatureHelper
 {
     public static function validate($response, $password)

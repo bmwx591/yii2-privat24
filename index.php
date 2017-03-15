@@ -17,7 +17,7 @@ $client = new Client([
     'isTest' => true
 ]);
 $request = new SendSMSRequest([
-//    'method' => 'post',
+    'method' => 'post',
     'paymentId' => 'payment_id_1',
     'properties' => [
         'phone' => '+380995038736',

@@ -14,9 +14,9 @@ use bmwx591\privat24\Object;
  */
 class SendSMSProperties extends Object implements PropertiesInterface
 {
-    protected $phone;
-    protected $phoneTo;
-    protected $text;
+    private $phone;
+    private $phoneTo;
+    private $text;
 
     /**
      * @return string

@@ -1,17 +1,13 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivan
- * Date: 19.11.16
- * Time: 15:41
- */
 
 namespace bmwx591\privat24\request;
 
 use bmwx591\privat24\Client;
+use bmwx591\privat24\FormatterInterface;
 use bmwx591\privat24\Object;
 use bmwx591\privat24\request\properties\PropertiesInterface;
 use bmwx591\privat24\SignatureHelper;
+use InvalidArgumentException;
 
 /**
  * Class Request
@@ -20,6 +16,11 @@ use bmwx591\privat24\SignatureHelper;
  */
 abstract class Request extends Object implements RequestInterface
 {
+
+    const METHOD_GET = 'get';
+    const METHOD_POST = 'post';
+
+    protected $url;
     private $client;
     private $operation = 'cmt';
     private $wait = 0;
@@ -28,8 +29,8 @@ abstract class Request extends Object implements RequestInterface
     private $properties;
     private $content;
     private $format = Client::FORMAT_XML;
-    private $method = 'get';
-    
+    private $method = self::METHOD_GET;
+
     /**
      * @return string
      */
@@ -41,11 +42,12 @@ abstract class Request extends Object implements RequestInterface
     /**
      * @param $url
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setUrl($url)
     {
         if (!is_string($url)) {
-            throw new \BadMethodCallException('url must be string');
+            throw new InvalidArgumentException('url must be string');
         }
         $this->url = $url;
         return $this;
@@ -62,11 +64,12 @@ abstract class Request extends Object implements RequestInterface
     /**
      * @param string $operation
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setOperation($operation)
     {
         if (!is_string($operation)) {
-            throw new \BadMethodCallException('operation must be string');
+            throw new InvalidArgumentException('operation must be string');
         }
         $this->operation = $operation;
         return $this;
@@ -83,11 +86,12 @@ abstract class Request extends Object implements RequestInterface
     /**
      * @param integer $wait
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setWait($wait)
     {
         if (!is_int($wait) || $wait < 0 || $wait > 90) {
-            throw new \BadMethodCallException('wait must be integer (0-90) seconds');
+            throw new InvalidArgumentException('wait must be integer (0-90) seconds');
         }
         $this->wait = $wait;
         return $this;
@@ -104,11 +108,12 @@ abstract class Request extends Object implements RequestInterface
     /**
      * @param boolean $test
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setTest($test)
     {
         if (!is_bool($test)) {
-            throw new \BadMethodCallException('test must be boolean');
+            throw new InvalidArgumentException('test must be boolean');
         }
         $this->test = $test;
         return $this;
@@ -125,11 +130,12 @@ abstract class Request extends Object implements RequestInterface
     /**
      * @param string $paymentId
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setPaymentId($paymentId)
     {
         if (!is_string($paymentId)) {
-            throw new \BadMethodCallException('paymentId must be string');
+            throw new InvalidArgumentException('paymentId must be string');
         }
         $this->paymentId = $paymentId;
         return $this;
@@ -172,11 +178,12 @@ abstract class Request extends Object implements RequestInterface
     /**
      * @param string $format
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setFormat($format)
     {
         if (!is_string($format)) {
-            throw new \BadMethodCallException('format must be string');
+            throw new InvalidArgumentException('format must be string');
         }
         $this->format = $format;
         return $this;
@@ -187,22 +194,27 @@ abstract class Request extends Object implements RequestInterface
      */
     public function getProperties()
     {
-        if (empty($this->properties)) {
-            throw new \BadMethodCallException('Must implements yii\request\properties\PropertiesInterface');
-        }
         return $this->properties;
     }
 
-    public function setProperties($properties = [])
+    /**
+     * Set request properties
+     * @param array $properties
+     * @throws InvalidArgumentException
+     */
+    public function setProperties(array $properties = [])
     {
         $properties = $this->getPropertiesInstance($properties);
         if (!$properties instanceof PropertiesInterface) {
-            throw new \BadMethodCallException('Properties must implements yii\request\properties\PropertiesInterface');
+            throw new InvalidArgumentException('Properties must implements PropertiesInterface');
         }
         $this->properties = $properties;
     }
 
-    abstract protected function getPropertiesInstance($properties);
+    /**
+     * @return populated PropertiesInterface instance
+     */
+    abstract protected function getPropertiesInstance(array $properties);
 
     /**
      * @return string
@@ -214,18 +226,19 @@ abstract class Request extends Object implements RequestInterface
 
     /**
      * @return Client
+     * @throws InvalidArgumentException
      */
     public function getClient()
     {
         if (empty($this->client)) {
-            throw new \BadMethodCallException('Must set the client property');
+            throw new InvalidArgumentException('Must set the client property');
         }
         return $this->client;
     }
 
     /**
      * @param Client $client
-     * @return Request
+     * @return $this
      */
     public function setClient(Client $client)
     {
@@ -233,26 +246,37 @@ abstract class Request extends Object implements RequestInterface
         return $this;
     }
 
+    /**
+     * Get request method
+     * @return string
+     */
     public function getMethod()
     {
         return $this->method;
     }
 
+    /**
+     * Set request method
+     * @param string $method
+     * @throws \BadMethodCallException
+     */
     public function setMethod($method)
     {
         if (!is_string($method)) {
-            throw new \BadMethodCallException('method must be string');
+            throw new InvalidArgumentException('method must be string');
         }
         $this->method = $method;
     }
 
     /**
      * Prepare request content
-     * @return $this
      */
     public function prepare()
     {
-        $this->getClient()->getFormatter($this->getFormat())->formate($this);
-        return $this;
+        $formatter = $this->getClient()->getFormatter($this->getFormat());
+        if (! $formatter instanceof FormatterInterface) {
+            throw new InvalidArgumentException('Invalid formatter type');
+        }
+        $formatter->format($this);
     }
 }

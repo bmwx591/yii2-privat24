@@ -9,9 +9,9 @@
 namespace bmwx591\privat24;
 
 
-use bmwx591\privat24\request\Request;
+use bmwx591\privat24\request\RequestInterface;
 
 interface FormatterInterface
 {
-    public function formate(Request $request);
+    public function formate(RequestInterface $request);
 }

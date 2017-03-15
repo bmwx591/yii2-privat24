@@ -2,15 +2,24 @@
 
 namespace bmwx591\privat24;
 
+use BadMethodCallException;
 use bmwx591\privat24\request\RequestInterface;
+use bmwx591\privat24\response\ResponseInterface;
+use bmwx591\privat24\XmlFormatter;
+use bmwx591\privat24\XmlParser;
+use Exception;
+use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Client as HttpClient;
 
 /**
  * Class Client
  * @package bmwx591\privat24
  *
+ * @property string $baseUrl Base api url
+ * @property array $formatters Formatters list
+ * @property array $parsers Parsers list
+ * @property ClientInterface $http Http client
  * @property integer $id Merchant id
  * @property string $password Merchant password
  * @property boolean $isTest is test request
@@ -18,13 +27,14 @@ use GuzzleHttp\Client as HttpClient;
 class Client extends Object
 {
     const FORMAT_XML = 'xml';
-    
+    const FORMAT_JSON = 'json';
+
     private $baseUrl = 'https://api.privatbank.ua/p24api/';
     private $formatters = [
-        self::FORMAT_XML => 'bmwx591\privat24\XmlFormatter'
+        self::FORMAT_XML => XmlFormatter::class
     ];
-    private $responseFormats = [
-        self::FORMAT_XML => 'bmwx591\privat24\XmlParser'
+    private $parsers = [
+        self::FORMAT_XML => XmlParser::class
     ];
     private $http;
     private $id;
@@ -37,7 +47,7 @@ class Client extends Object
     public function setBaseUrl($baseUrl)
     {
         if (!is_string($baseUrl)) {
-            throw new \BadMethodCallException('baseUrl must be string');
+            throw new BadMethodCallException('baseUrl must be string');
         }
         $this->baseUrl = $baseUrl;
     }
@@ -52,12 +62,12 @@ class Client extends Object
 
     /**
      * @param integer $id
-     * @throws \BadMethodCallException
+     * @throws BadMethodCallException
      */
     public function setId($id)
     {
         if (!is_int($id) || $id < 1) {
-            throw new \BadMethodCallException('Id must be integer');
+            throw new BadMethodCallException('Id must be integer');
         }
         $this->id = $id;
     }
@@ -72,12 +82,12 @@ class Client extends Object
 
     /**
      * @param string $password
-     * @throws \BadMethodCallException
+     * @throws BadMethodCallException
      */
     public function setPassword($password)
     {
         if (!is_string($password) || !preg_match('/^[0-9a-zA-Z]{32}$/', $password)) {
-            throw new \BadMethodCallException('Illegal password value');
+            throw new BadMethodCallException('Illegal password value');
         }
         $this->password = $password;
     }
@@ -96,15 +106,20 @@ class Client extends Object
     public function setIsTest($isTest)
     {
         if (!is_bool($isTest)) {
-            throw new \BadMethodCallException('Parametr must be boolean');
+            throw new BadMethodCallException('Parametr must be boolean');
         }
         $this->isTest = $isTest;
     }
-    
+
+    /**
+     * @param string $format
+     * @return FormatterInterface
+     * @throws BadMethodCallException
+     */
     public function getFormatter($format)
     {
         if (!isset($this->formatters[$format])) {
-            throw new \BadMethodCallException("Unrecognized format '{$format}'");
+            throw new BadMethodCallException("Unrecognized format '{$format}'");
         }
         $formatter = $this->formatters[$format];
         if (is_string($formatter)) {
@@ -113,11 +128,15 @@ class Client extends Object
         return $this->formatters[$format];
     }
 
-
+    /**
+     * @param string $format
+     * @return ParserInterface
+     * @throws BadMethodCallException
+     */
     public function getParser($format)
     {
         if (!isset($this->parsers[$format])) {
-            throw new \BadMethodCallException("Unrecornized format '{$format}'");
+            throw new BadMethodCallException("Unrecornized format '{$format}'");
         }
         $parser = $this->parsers[$format];
         if (is_string($parser)) {
@@ -127,24 +146,22 @@ class Client extends Object
     }
 
     /**
-     * @return HttpClient
+     * @return ClientInterface
      */
     public function getHttpClient()
     {
         if (empty($this->http)) {
-            $this->http = new HttpClient();
+            $this->http = new HttpClient([
+                'base_uri' => $this->baseUrl
+            ]);
         }
         return $this->http;
     }
 
     /**
-     * @param ClientInterface $http
+     * @param RequestInterface $request
+     * @return Request
      */
-    public function setHttpClient(ClientInterface $http)
-    {
-        $this->http = $http;
-    }
-
     protected function getHttpRequest(RequestInterface $request)
     {
         return new Request($request->getMethod(), $request->getUrl(), [
@@ -152,40 +169,23 @@ class Client extends Object
         ], $request->getContent());
     }
 
-    public function getFormatters()
-    {
-        return $this->formatters;
-    }
-
+    /**
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     * @throws Exception
+     */
     public function send(RequestInterface $request)
     {
-        $parser = new XmlParser();
-        $content = '<?xml version="1.0" encoding="UTF-8"?>
-            <response version="1.0">
-                <merchant>
-                    <id>75482</id>
-                    <signature>553995c5ccc8c81815b58cf6374f68f00a28bbd7</signature>
-                </merchant>
-                <data>
-                    <oper>cmt</oper>
-                    <info>
-                        <statements status="excellent" credit="0.0" debet="0.3"  >
-                            <statement card="5168742060221193" appcode="591969" trandate="2013-09-02" amount="0.10 UAH" cardamount="-0.10 UAH" rest="0.95 UAH" terminal="Пополнение мобильного +380139917053 через «Приват24»" description="" />
-                            <statement card="5168742060221193" appcode="991794" trandate="2013-09-02" amount="0.10 UAH" cardamount="-0.10 UAH" rest="1.05 UAH" terminal="Пополнение мобильного +380139917035 через «Приват24»" description="" />
-                            <statement card="5168742060221193" appcode="801111" trandate="2013-09-02" amount="0.10 UAH" cardamount="-0.10 UAH" rest="1.15 UAH" terminal="Пополнение мобильного +380139910008 через «Приват24»" description="" />
-                        </statements>
-                    </info>
-                </data>
-            </response>
-        ';
-        return $parser->parse($content);
         $request->setClient($this)->prepare();
         $httpRequest = $this->getHttpRequest($request);
-        $response = $this->getHttpClient()->send($httpRequest, ['base_uri' => $this->baseUrl]);
-        $responseContent = $response->getBody()->getContents();
+        $httpResponse = $this->getHttpClient()->send($httpRequest);
+        $responseContent = $httpResponse->getBody()->getContents();
         if (SignatureHelper::validate($responseContent, $this->getPassword())) {
-            return $this->getParser($request->getFormat())->parse($responseContent);
+            $parser = $this->getParser($request->getFormat());
+            if ($parser instanceof ParserInterface) {
+                return $parser->parse($responseContent);
+            }
         }
-        throw new \Exception('Response is not valid');
+        throw new Exception('Response is not valid');
     }
 }
