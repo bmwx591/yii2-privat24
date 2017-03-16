@@ -15,4 +15,9 @@ interface PropertiesInterface
      * @return array 
      */
     public function getValues();
+
+    /**
+     * @return bool
+     */
+    public function validate();
 }

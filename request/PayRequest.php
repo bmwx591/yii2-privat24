@@ -2,7 +2,7 @@
 
 namespace bmwx591\privat24\request;
 
-use bmwx591\privat24\Client;
+use bmwx591\privat24\ClientInterface;
 use bmwx591\privat24\FormatterInterface;
 use bmwx591\privat24\Object;
 use bmwx591\privat24\request\properties\PropertiesInterface;
@@ -14,22 +14,24 @@ use InvalidArgumentException;
  * @package bmwx591\privat24\request
  *
  */
-abstract class Request extends Object implements RequestInterface
+abstract class PayRequest extends Object implements RequestInterface
 {
 
     const METHOD_GET = 'get';
     const METHOD_POST = 'post';
+    const OPERATION_TYPE_CMT = 'cmt';
+    const OPERATION_TYPE_PRP = 'prp';
 
     protected $url;
-    private $client;
-    private $operation = 'cmt';
-    private $wait = 0;
-    private $test;
-    private $paymentId;
-    private $properties;
-    private $content;
-    private $format = Client::FORMAT_XML;
-    private $method = self::METHOD_GET;
+    protected $client;
+    protected $operation = self::OPERATION_TYPE_CMT;
+    protected $wait = 0;
+    protected $test;
+    protected $paymentId;
+    protected $properties;
+    protected $content;
+    protected $format = ClientInterface::FORMAT_XML;
+    protected $method = self::METHOD_GET;
 
     /**
      * @return string
@@ -40,8 +42,8 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param $url
-     * @return $this
+     * @param string $url
+     * @return PayRequest
      * @throws InvalidArgumentException
      */
     public function setUrl($url)
@@ -63,7 +65,7 @@ abstract class Request extends Object implements RequestInterface
 
     /**
      * @param string $operation
-     * @return $this
+     * @return PayRequest
      * @throws InvalidArgumentException
      */
     public function setOperation($operation)
@@ -85,7 +87,7 @@ abstract class Request extends Object implements RequestInterface
 
     /**
      * @param integer $wait
-     * @return $this
+     * @return PayRequest
      * @throws InvalidArgumentException
      */
     public function setWait($wait)
@@ -98,7 +100,7 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getTest()
     {
@@ -106,8 +108,8 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param boolean $test
-     * @return $this
+     * @param bool $test
+     * @return PayRequest
      * @throws InvalidArgumentException
      */
     public function setTest($test)
@@ -129,7 +131,7 @@ abstract class Request extends Object implements RequestInterface
 
     /**
      * @param string $paymentId
-     * @return $this
+     * @return PayRequest
      * @throws InvalidArgumentException
      */
     public function setPaymentId($paymentId)
@@ -142,7 +144,7 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getContent()
     {
@@ -150,8 +152,8 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param mixed $content
-     * @return $this
+     * @param string $content
+     * @return PayRequest
      */
     public function setContent($content)
     {
@@ -177,7 +179,7 @@ abstract class Request extends Object implements RequestInterface
 
     /**
      * @param string $format
-     * @return $this
+     * @return PayRequest
      * @throws InvalidArgumentException
      */
     public function setFormat($format)
@@ -208,11 +210,14 @@ abstract class Request extends Object implements RequestInterface
         if (!$properties instanceof PropertiesInterface) {
             throw new InvalidArgumentException('Properties must implements PropertiesInterface');
         }
+        if (!$properties->validate()) {
+            throw new InvalidArgumentException('Properties in not valid');
+        }
         $this->properties = $properties;
     }
 
     /**
-     * @return populated PropertiesInterface instance
+     * @return PropertiesInterface Properties instance
      */
     abstract protected function getPropertiesInstance(array $properties);
 
@@ -225,7 +230,7 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @return Client
+     * @return ClientInterface
      * @throws InvalidArgumentException
      */
     public function getClient()
@@ -237,10 +242,10 @@ abstract class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param Client $client
-     * @return $this
+     * @param ClientInterface $client
+     * @return PayRequest
      */
-    public function setClient(Client $client)
+    public function setClient(ClientInterface $client)
     {
         $this->client = $client;
         return $this;
@@ -258,7 +263,7 @@ abstract class Request extends Object implements RequestInterface
     /**
      * Set request method
      * @param string $method
-     * @throws \BadMethodCallException
+     * @throws InvalidArgumentException
      */
     public function setMethod($method)
     {
@@ -273,10 +278,18 @@ abstract class Request extends Object implements RequestInterface
      */
     public function prepare()
     {
-        $formatter = $this->getClient()->getFormatter($this->getFormat());
+        $formatter = $this->getClient()->getFormatter($this->format);
         if (! $formatter instanceof FormatterInterface) {
             throw new InvalidArgumentException('Invalid formatter type');
         }
-        $formatter->format($this);
+        $formatter->formate($this);
+    }
+
+    /**
+     * @return bool
+     */
+    public function validate()
+    {
+        return !($this->getMerchantId() || $this->wait || $this->test || $this->paymentId || $this->properties);
     }
 }

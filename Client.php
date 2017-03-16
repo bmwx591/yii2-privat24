@@ -2,15 +2,13 @@
 
 namespace bmwx591\privat24;
 
-use BadMethodCallException;
 use bmwx591\privat24\request\RequestInterface;
 use bmwx591\privat24\response\ResponseInterface;
-use bmwx591\privat24\XmlFormatter;
-use bmwx591\privat24\XmlParser;
 use Exception;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
+use InvalidArgumentException;
 
 /**
  * Class Client
@@ -24,10 +22,8 @@ use GuzzleHttp\Psr7\Request;
  * @property string $password Merchant password
  * @property boolean $isTest is test request
  */
-class Client extends Object
+class Client extends Object implements \bmwx591\privat24\ClientInterface
 {
-    const FORMAT_XML = 'xml';
-    const FORMAT_JSON = 'json';
 
     private $baseUrl = 'https://api.privatbank.ua/p24api/';
     private $formatters = [
@@ -43,17 +39,18 @@ class Client extends Object
 
     /**
      * @param string $baseUrl
+     * @throws InvalidArgumentException
      */
     public function setBaseUrl($baseUrl)
     {
         if (!is_string($baseUrl)) {
-            throw new BadMethodCallException('baseUrl must be string');
+            throw new InvalidArgumentException('"baseUrl" must be string');
         }
         $this->baseUrl = $baseUrl;
     }
 
     /**
-     * @return integer
+     * @inheritdoc
      */
     public function getId()
     {
@@ -62,18 +59,18 @@ class Client extends Object
 
     /**
      * @param integer $id
-     * @throws BadMethodCallException
+     * @throws InvalidArgumentException
      */
     public function setId($id)
     {
         if (!is_int($id) || $id < 1) {
-            throw new BadMethodCallException('Id must be integer');
+            throw new InvalidArgumentException('"Id" must be integer');
         }
         $this->id = $id;
     }
 
     /**
-     * @return string
+     * @inheritdoc
      */
     public function getPassword()
     {
@@ -82,18 +79,18 @@ class Client extends Object
 
     /**
      * @param string $password
-     * @throws BadMethodCallException
+     * @throws InvalidArgumentException
      */
     public function setPassword($password)
     {
         if (!is_string($password) || !preg_match('/^[0-9a-zA-Z]{32}$/', $password)) {
-            throw new BadMethodCallException('Illegal password value');
+            throw new InvalidArgumentException('Illegal password value');
         }
         $this->password = $password;
     }
 
     /**
-     * @return boolean
+     * @inheritdoc
      */
     public function getIsTest()
     {
@@ -102,11 +99,12 @@ class Client extends Object
 
     /**
      * @param boolean $isTest
+     * @throws InvalidArgumentException
      */
     public function setIsTest($isTest)
     {
         if (!is_bool($isTest)) {
-            throw new BadMethodCallException('Parametr must be boolean');
+            throw new InvalidArgumentException('Parameter must be boolean');
         }
         $this->isTest = $isTest;
     }
@@ -114,12 +112,12 @@ class Client extends Object
     /**
      * @param string $format
      * @return FormatterInterface
-     * @throws BadMethodCallException
+     * @throws InvalidArgumentException
      */
-    public function getFormatter($format)
+    public function getFormatter($format = self::FORMAT_XML)
     {
         if (!isset($this->formatters[$format])) {
-            throw new BadMethodCallException("Unrecognized format '{$format}'");
+            throw new InvalidArgumentException("Unrecognized format '{$format}'");
         }
         $formatter = $this->formatters[$format];
         if (is_string($formatter)) {
@@ -131,12 +129,12 @@ class Client extends Object
     /**
      * @param string $format
      * @return ParserInterface
-     * @throws BadMethodCallException
+     * @throws InvalidArgumentException
      */
-    public function getParser($format)
+    protected function getParser($format)
     {
         if (!isset($this->parsers[$format])) {
-            throw new BadMethodCallException("Unrecornized format '{$format}'");
+            throw new InvalidArgumentException("Unrecornized format '{$format}'");
         }
         $parser = $this->parsers[$format];
         if (is_string($parser)) {
@@ -172,11 +170,16 @@ class Client extends Object
     /**
      * @param RequestInterface $request
      * @return ResponseInterface
+     * @throws InvalidArgumentException
      * @throws Exception
      */
     public function send(RequestInterface $request)
     {
-        $request->setClient($this)->prepare();
+        $request->setClient($this);
+        if (!$request->validate()) {
+            throw new InvalidArgumentException('Request in not valid');
+        }
+        $request->prepare();
         $httpRequest = $this->getHttpRequest($request);
         $httpResponse = $this->getHttpClient()->send($httpRequest);
         $responseContent = $httpResponse->getBody()->getContents();
@@ -185,6 +188,7 @@ class Client extends Object
             if ($parser instanceof ParserInterface) {
                 return $parser->parse($responseContent);
             }
+            throw new InvalidArgumentException('Invalid parser type');
         }
         throw new Exception('Response is not valid');
     }

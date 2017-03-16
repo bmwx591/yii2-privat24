@@ -32,7 +32,7 @@ class SendSMSProperties extends Object implements PropertiesInterface
     public function setPhone($phone)
     {
         if (!is_string($phone)) {
-            throw new \BadMethodCallException('phone must be string');
+            throw new \InvalidArgumentException('"phone" must be a string');
         }
         $this->phone = $phone;
     }
@@ -51,7 +51,7 @@ class SendSMSProperties extends Object implements PropertiesInterface
     public function setPhoneTo($phoneTo)
     {
         if (!is_string($phoneTo)) {
-            throw new \BadMethodCallException('phoneTo must be string');
+            throw new \InvalidArgumentException('"phoneTo" must be a string');
         }
         $this->phoneTo = $phoneTo;
     }
@@ -70,7 +70,7 @@ class SendSMSProperties extends Object implements PropertiesInterface
     public function setText($text)
     {
         if (!is_string($text)) {
-            throw new \BadMethodCallException('text must be string');
+            throw new \InvalidArgumentException('"text" must be a string');
         }
         $this->text = $text;
     }
@@ -85,5 +85,13 @@ class SendSMSProperties extends Object implements PropertiesInterface
             'phoneto' => urlencode($this->getPhoneTo()),
             'text' => urlencode($this->getText())
         ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function validate()
+    {
+        return !(empty($this->phone) || empty($this->phoneTo) || empty($this->text));
     }
 }

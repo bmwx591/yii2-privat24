@@ -13,6 +13,7 @@ interface ResponseInterface
 
     /**
      * Get response content
+     * @return mixed
      */
     public function getContent();
 }

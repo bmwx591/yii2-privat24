@@ -7,8 +7,7 @@ class Response implements ResponseInterface
     private $content;
 
     /**
-     * @inheridoc
-     * @return mixed
+     * @inheritdoc
      */
     public function getContent()
     {
@@ -16,8 +15,7 @@ class Response implements ResponseInterface
     }
 
     /**
-     *
-     * @param mixed $content
+     * @inheritdoc
      */
     public function setContent($content)
     {

@@ -10,7 +10,7 @@ class XmlParser implements ParserInterface
 {
     /**
      *
-     * @param string $response
+     * @param string $content
      * @return ResponseInterface
      */
     public function parse($content)
@@ -24,8 +24,8 @@ class XmlParser implements ParserInterface
 
     /**
      * Parse xml to nodes
-     * @param type $xml
-     * @param type $name
+     * @param string $xml
+     * @param string $name
      * @return Node
      */
     protected function convertXmlToArray($xml, $name = 'root')
@@ -41,6 +41,11 @@ class XmlParser implements ParserInterface
         return $node;
     }
 
+    /**
+     * @param \SimpleXMLElement|array|string $el
+     * @param string $key
+     * @param Node $node
+     */
     private function parseElement($el, $key, $node)
     {
         $values = [];

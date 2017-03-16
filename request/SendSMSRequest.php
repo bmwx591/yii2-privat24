@@ -9,17 +9,16 @@
 
 namespace bmwx591\privat24\request;
 
-use bmwx591\privat24\request\properties\PropertiesInterface;
 use bmwx591\privat24\request\properties\SendSMSProperties;
-use Yii;
 
 /**
  * Class SendSMSRequest
  * @package bmwx591\privat24\request
  */
-class SendSMSRequest extends Request
+class SendSMSPayRequest extends PayRequest
 {
     protected $url = 'sendsms';
+    protected $method = self::METHOD_POST;
 
     /**
      * @param array $properties Request properties

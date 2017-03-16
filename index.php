@@ -8,7 +8,8 @@ $application = new yii\console\Application([
 ]);
 $application->run();
 
-use bmwx591\privat24\request\SendSMSRequest;
+use bmwx591\privat24\request\SendSMSPayRequest;
+use bmwx591\privat24\request\MobileReplenishmentRequest;
 use bmwx591\privat24\Client;
 
 $client = new Client([
@@ -16,8 +17,7 @@ $client = new Client([
     'password' => '11111111111111111111111111111111',
     'isTest' => true
 ]);
-$request = new SendSMSRequest([
-    'method' => 'post',
+$sendSmsRequest = new SendSMSPayRequest([
     'paymentId' => 'payment_id_1',
     'properties' => [
         'phone' => '+380995038736',
@@ -25,5 +25,14 @@ $request = new SendSMSRequest([
         'text' => 'Hello'
     ]
 ]);
+$mobileReplenishmentRequest = new MobileReplenishmentRequest([
+    'paymentId' => 'payment_id_2',
+    'properties' => [
+        'phone' => '+380995038736',
+        'amt' => 30.25
+    ]
+]);
 //var_dump($request);die;
-print_r($client->send($request));die;
+print_r($client->send($sendSmsRequest));
+print_r($client->send($mobileReplenishmentRequest));
+die;
